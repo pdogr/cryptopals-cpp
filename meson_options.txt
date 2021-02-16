@@ -1,0 +1,2 @@
+option('set',type:'string',value:'set1',description: 'Choose set')
+option('file',type: 'string',value:'1.cpp',description: 'Which file')
