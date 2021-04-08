@@ -28,7 +28,7 @@ main ()
 
   assert (hamming (v1, v2) == 37);
 
-  string b64encoded=readall("../data/6.txt");
+  string b64encoded = readall ("../data/6.txt");
   vector<uint8_t> ct = bytes (b64decode (b64encoded));
   vector<int> probableKeyLengths = kasiki (ct);
 

@@ -291,7 +291,6 @@ AES::decryptBlock (uint8_t *in, uint8_t *out)
   InvSubBytes (state);
   InvShiftRows (state);
   AddRoundKey (state, w);
-
   for (int i = 0; i < 4; ++i)
     {
       for (int j = 0; j < Nb; ++j)
@@ -342,7 +341,6 @@ AES::decryptECB (vector<uint8_t> ct)
     }
   ssize_t unpad_len = remove_pading (out, input_len);
   vector<uint8_t> plain_text (out, out + unpad_len * sizeof (uint8_t));
-
   delete[] in;
   delete[] out;
   return plain_text;
@@ -401,7 +399,7 @@ AES::decryptCBC (vector<uint8_t> ct, vector<uint8_t> IV)
       decryptBlock (in + i, out + i);
       for (int j = 0; j < 4 * Nb; ++j)
         {
-          out[i+j] ^= block[j];
+          out[i + j] ^= block[j];
         }
       memcpy (block, in + i, 4 * Nb * sizeof (uint8_t));
     }
@@ -458,13 +456,29 @@ remove_pading (uint8_t *in, ssize_t buf_size)
 {
   uint8_t pad_byte = in[buf_size - 1];
   ssize_t i = buf_size - pad_byte;
-  while (i < buf_size)
+  while (i >= 0 and i < buf_size)
     {
       if (in[i] != pad_byte)
         {
-          throw ;
+          throw;
         }
       ++i;
     }
   return buf_size - pad_byte;
+}
+
+bool
+is_valid_PKCS7 (vector<uint8_t> v)
+{
+  int pad_byte = v.back ();
+  if (pad_byte > 0x10 or v.size () < pad_byte)
+    return 0;
+  int i = v.size () - pad_byte;
+  while (i >= 0 and i < v.size ())
+    {
+      if (v[i] != pad_byte & 0xf)
+        return 0;
+      ++i;
+    }
+  return 1;
 }

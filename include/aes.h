@@ -247,3 +247,5 @@ string detect_aes_ecb (vector<string>, int);
 pair<ssize_t, uint8_t> PKCS7 (ssize_t, int);
 void add_padding (uint8_t *, ssize_t, ssize_t, uint8_t);
 ssize_t remove_pading (uint8_t *in, ssize_t buf_size);
+
+bool is_valid_PKCS7 (vector<uint8_t>);

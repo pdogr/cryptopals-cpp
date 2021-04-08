@@ -33,4 +33,4 @@ bool printable (vector<uint8_t>);
 
 string readall (char *);
 
-void random_bytes(uint8_t *,ssize_t);
+void random_bytes (uint8_t *, ssize_t);

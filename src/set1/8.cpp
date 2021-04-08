@@ -29,5 +29,5 @@ main ()
     }
 
   string most_probable = detect_aes_ecb (ct_list, 16);
-  cout << bytes(most_probable) << "\n";
+  cout << bytes (most_probable) << "\n";
 }
