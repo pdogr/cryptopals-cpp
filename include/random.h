@@ -13,5 +13,8 @@ private:
 
 public:
   MT19937 (uint32_t seed);
+  MT19937 (vector<uint32_t> vals);
   uint32_t operator() ();
 };
+
+vector<uint8_t> tfm_mt19937 (vector<uint8_t> ks, uint32_t key);
