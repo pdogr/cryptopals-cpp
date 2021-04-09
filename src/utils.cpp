@@ -91,7 +91,18 @@ readall (char *filename)
     }
   return s;
 }
-
+vector<string>
+readline (char *filename)
+{
+  fstream f (filename);
+  string t;
+  vector<string> v;
+  while (f >> t)
+    {
+      v.push_back (t);
+    }
+  return v;
+}
 void
 random_bytes (uint8_t *out, ssize_t l)
 {

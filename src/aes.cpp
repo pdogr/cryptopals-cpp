@@ -403,7 +403,7 @@ AES::decryptCBC (vector<uint8_t> ct, vector<uint8_t> IV)
         }
       memcpy (block, in + i, 4 * Nb * sizeof (uint8_t));
     }
-  ssize_t unpad_len = remove_pading (out, input_len);
+  ssize_t unpad_len = input_len;
   vector<uint8_t> plain_text (out, out + unpad_len * sizeof (uint8_t));
   delete[] in;
   delete[] out;
@@ -411,6 +411,74 @@ AES::decryptCBC (vector<uint8_t> ct, vector<uint8_t> IV)
   return plain_text;
 }
 
+vector<uint8_t>
+AES::encryptCTR (vector<uint8_t> pt, uint64_t nonce)
+{
+  ssize_t input_len = pt.size ();
+  ssize_t total_len = 4 * Nb * ceil (input_len / 16.0);
+  uint8_t *in = new uint8_t[16], *out = new uint8_t[total_len];
+  uint64_t counter = 0;
+  int id = 0;
+  for (int i = 0; i <= 7; ++i)
+    {
+      in[i] = nonce & 0xff;
+      nonce >>= 8;
+    }
+  for (int i = 0; i < total_len; i += 4 * Nb)
+    {
+      uint64_t temp = counter;
+      for (int j = 0; j <= 7; ++j)
+        {
+          in[j + 8] = counter & 0xff;
+          counter >>= 8;
+        }
+      counter = temp + 1;
+      encryptBlock (in, out + i);
+      while (id < input_len and id < i + 4 * Nb)
+        {
+          out[id] ^= pt[id];
+          ++id;
+        }
+    }
+  vector<uint8_t> cipher_text (out, out + input_len * sizeof (uint8_t));
+  delete[] in;
+  delete[] out;
+  return cipher_text;
+}
+vector<uint8_t>
+AES::decryptCTR (vector<uint8_t> ct, uint64_t nonce)
+{
+  ssize_t input_len = ct.size ();
+  ssize_t total_len = 4 * Nb * ceil (input_len / 16.0);
+  uint8_t *in = new uint8_t[16], *out = new uint8_t[total_len];
+  uint64_t counter = 0;
+  int id = 0;
+  for (int i = 0; i <= 7; ++i)
+    {
+      in[i] = nonce & 0xff;
+      nonce >>= 0;
+    }
+  for (int i = 0; i < total_len; i += 4 * Nb)
+    {
+      uint64_t temp = counter;
+      for (int j = 0; j <= 7; ++j)
+        {
+          in[j + 8] = counter & 0xff;
+          counter >>= 8;
+        }
+      counter = temp + 1;
+      encryptBlock (in, out + i);
+      while (id < input_len and id < i + 4 * Nb)
+        {
+          out[id] ^= ct[id];
+          ++id;
+        }
+    }
+  vector<uint8_t> plain_text (out, out + input_len * sizeof (uint8_t));
+  delete[] in;
+  delete[] out;
+  return plain_text;
+}
 string
 detect_aes_ecb (vector<string> ct_list, int block_size)
 {
@@ -471,7 +539,7 @@ bool
 is_valid_PKCS7 (vector<uint8_t> v)
 {
   int pad_byte = v.back ();
-  if (pad_byte > 0x10 or v.size () < pad_byte)
+  if (pad_byte == 0 or pad_byte > 0x10 or v.size () < pad_byte)
     return 0;
   int i = v.size () - pad_byte;
   while (i >= 0 and i < v.size ())

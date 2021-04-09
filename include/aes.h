@@ -236,10 +236,12 @@ public:
   AES (uint8_t *, int);
   ~AES ();
 
-  vector<uint8_t> encryptECB (vector<uint8_t>);
-  vector<uint8_t> decryptECB (vector<uint8_t>);
-  vector<uint8_t> encryptCBC (vector<uint8_t>, vector<uint8_t>);
-  vector<uint8_t> decryptCBC (vector<uint8_t>, vector<uint8_t>);
+  vector<uint8_t> encryptECB (vector<uint8_t> pt);
+  vector<uint8_t> decryptECB (vector<uint8_t> ct);
+  vector<uint8_t> encryptCBC (vector<uint8_t> pt, vector<uint8_t> IV);
+  vector<uint8_t> decryptCBC (vector<uint8_t> ct, vector<uint8_t> IV);
+  vector<uint8_t> encryptCTR (vector<uint8_t> pt, uint64_t nonce);
+  vector<uint8_t> decryptCTR (vector<uint8_t> ct, uint64_t nonce);
 };
 
 string detect_aes_ecb (vector<string>, int);

@@ -27,10 +27,9 @@ string to_string (uint8_t[], ssize_t);
 string hex (vector<uint8_t>);
 vector<uint8_t> bytes (string);
 string to_string (vector<uint8_t>);
-
 bool eq (string, string);
 bool printable (vector<uint8_t>);
 
 string readall (char *);
-
+vector<string> readline (char *);
 void random_bytes (uint8_t *, ssize_t);

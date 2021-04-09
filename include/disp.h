@@ -39,10 +39,16 @@ ostream &operator<< (ostream &os, const gp_hash_table<L, R, chash> &M);
 ostream &
 operator<< (ostream &os, const vector<uint8_t> &V)
 {
-  os << "[ ";
-  for (auto v : V)
-    os << "0x" << std::hex << int (v) << " ";
-  return os << "]";
+  for (int i = 0; i < V.size (); i += 16)
+    {
+      os << "[ ";
+      for (int j = 0; j < 16 and i + j < V.size (); ++j)
+        {
+          os << "0x" << std::hex << int (V[i + j]) << " ";
+        }
+      os << " ]\n";
+    }
+  return os;
 }
 template <class T>
 ostream &
