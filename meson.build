@@ -4,27 +4,27 @@ project('cryptopals-cpp',
     license : [ 'MIT'],
     meson_version : '>= 0.56.0',
     default_options : [ 'warning_level=3', 'buildtype=debugoptimized', 'cpp_std=c++17' ])
-inc=include_directories('include')
-sources=[]
-build_args=[]
 
+project_sources=[]
+project_headers=[]
+inc=[include_directories('include')]
 deps=[
 	dependency('boost'),
 ]
 
-sources+=run_command('all.sh','src').stdout().strip().split('\n')
+subdir('src')
+subdir('include')
 
 set=get_option('set')
 file=get_option('file')
 
-sources+=[
+project_sources+=[
   'src/'+set+'/'+file
 ]
 
 target=executable(meson.project_name(),
-      sources,
-    dependencies: deps,
-    include_directories: inc)
+      project_sources,
+    dependencies: deps,include_directories:inc )
 
 
 
