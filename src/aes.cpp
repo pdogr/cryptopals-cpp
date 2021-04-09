@@ -456,7 +456,7 @@ AES::decryptCTR (vector<uint8_t> ct, uint64_t nonce)
   for (int i = 0; i <= 7; ++i)
     {
       in[i] = nonce & 0xff;
-      nonce >>= 0;
+      nonce >>= 8;
     }
   for (int i = 0; i < total_len; i += 4 * Nb)
     {

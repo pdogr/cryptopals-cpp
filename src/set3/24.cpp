@@ -1,5 +1,5 @@
 #include "../../include/disp.h"
-#include "../../include/random.h"
+#include "../../include/mt19937.h"
 #include "../../include/utils.h"
 #include <fcntl.h>
 vector<uint8_t> known_pt;

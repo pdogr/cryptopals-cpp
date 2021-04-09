@@ -1,4 +1,4 @@
-#include "../include/random.h"
+#include "../include/mt19937.h"
 
 MT19937::MT19937 (uint32_t seed)
 {
