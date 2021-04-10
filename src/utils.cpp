@@ -112,3 +112,12 @@ random_bytes (uint8_t *out, ssize_t l)
       urandom.read (reinterpret_cast<char *> (out), l * sizeof (uint8_t));
     }
 }
+vector<uint8_t>
+random_vec (ssize_t sz)
+{
+  uint8_t *tmp = new uint8_t[sz];
+  random_bytes (tmp, sz);
+  vector<uint8_t> b (tmp, tmp + sz);
+  delete[] tmp;
+  return b;
+}

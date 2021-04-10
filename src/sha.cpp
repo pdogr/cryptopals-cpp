@@ -170,3 +170,32 @@ sha128sum (vector<uint8_t> v, size_t bitlen)
   delete[] out;
   return b;
 }
+
+vector<uint8_t>
+MAC (vector<uint8_t> secret_key, vector<uint8_t> msg, SHA1_CTX *ctx)
+{
+  if (!ctx)
+    {
+      ctx = new SHA1_CTX ();
+      sha1_init (ctx);
+    }
+  uint8_t *out = new uint8_t[20];
+  for (int i = 0; i < 20; ++i)
+    out[i] = secret_key[i];
+  sha1_init (ctx);
+  sha1_update (ctx, out, 20);
+  size_t size = 0x1000000;
+  uint8_t *tmp = new uint8_t[size];
+  for (int i = 0; i < msg.size (); i += size)
+    {
+      size_t cur_block = 0;
+      for (int j = 0; j < size and j + i < msg.size (); ++j)
+        {
+          tmp[j] = msg[i + j];
+          cur_block++;
+        }
+      sha1_update (ctx, tmp, cur_block);
+    }
+  sha1_final (ctx, out);
+  return vector<uint8_t> (out, out + 20);
+}

@@ -3,5 +3,6 @@ project_headers+=[
   'aes.h',
   'utils.h',
   'mt19937.h',
-  'sha.h'
+  'sha.h',
+  'dh.h'
 ]

@@ -18,3 +18,6 @@ void sha1_update (SHA1_CTX *ctx, const uint8_t *data, size_t len);
 void sha1_final (SHA1_CTX *ctx, uint8_t *hash);
 
 vector<uint8_t> sha128sum (vector<uint8_t> v, size_t bitlen);
+
+vector<uint8_t> MAC (vector<uint8_t> secret_key, vector<uint8_t> msg,
+                     SHA1_CTX * = 0);

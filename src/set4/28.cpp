@@ -1,5 +1,6 @@
 #include "../../include/disp.h"
 #include "../../include/sha.h"
+#include "../../include/utils.h"
 #include <string.h>
 
 uint8_t
@@ -109,4 +110,13 @@ main ()
 {
   test_file ("../test_vecs/SHA1ShortMsg.rsp", 20);
   test_file ("../test_vecs/SHA1LongMsg.rsp", 20);
+  vector<uint8_t> K = random_vec (20);
+  vector<uint8_t> M = random_vec (0xaaaeff);
+  cout << "Size of M: " << M.size () << "\n";
+
+  cout << MAC (K, M) << "\n";
+
+  for (auto &x : M)
+    K.push_back (x);
+  cout << sha128sum (K, 8 * K.size ()) << "\n";
 }
