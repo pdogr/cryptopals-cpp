@@ -79,6 +79,9 @@ test_file (char *filename, const ssize_t md_bytes)
 
 #ifdef DEBUG
       fprintf (stderr, "File: %s\n", filename);
+      fprintf (stderr, "L = %d\n", bitlen);
+      fprintf (stderr, "MSG = %s\n", hex_msg);
+      fprintf (stderr, "File: %s\n", filename);
       fprintf (stderr, "Expected:\t");
       for (int i = 0; i < md_bytes; ++i)
         {
@@ -92,7 +95,6 @@ test_file (char *filename, const ssize_t md_bytes)
         }
       fprintf (stderr, "\n%s\n", result);
 #endif
-
       free (out_md);
       free (md);
       free (msg);
@@ -101,20 +103,22 @@ test_file (char *filename, const ssize_t md_bytes)
       ++total;
       correct += pass;
     }
-  fprintf (stderr, "File: %s\t Total: %d\t Correct: %d\n", filename, total,
+  fprintf (stderr, "File: %s\tTotal: %d\tCorrect: %d\n", filename, total,
            correct);
 }
 
 int
 main ()
 {
-  test_file ("../test_vecs/SHA1ShortMsg.rsp", 20);
-  test_file ("../test_vecs/SHA1LongMsg.rsp", 20);
-  vector<uint8_t> K = random_vec (20);
+  test_file ("../test_vecs/byte/SHA1ShortMsg.rsp", 20);
+  test_file ("../test_vecs/byte/SHA1LongMsg.rsp", 20);
+  test_file ("../test_vecs/bit/SHA1ShortMsg.rsp", 20);
+  test_file ("../test_vecs/bit/SHA1LongMsg.rsp", 20);
+  vector<uint8_t> K = random_vec (64);
   vector<uint8_t> M = random_vec (0xaaaeff);
   cout << "Size of M: " << M.size () << "\n";
 
-  cout << MAC (K, M) << "\n";
+  cout << MAC (K, M, M.size () * 8) << "\n";
 
   for (auto &x : M)
     K.push_back (x);

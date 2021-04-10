@@ -1,4 +1,7 @@
 #include "../include/sha.h"
+
+uint8_t amask[] = { 0x0, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe };
+uint8_t omask[] = { 0x80, 0x40, 0x20, 0x10, 0x8, 0x4, 0x2, 0x1 };
 void
 sha1_transform (SHA1_CTX *ctx, const uint8_t *data)
 {
@@ -80,17 +83,29 @@ sha1_init (SHA1_CTX *ctx)
 }
 
 void
-sha1_update (SHA1_CTX *ctx, const uint8_t data[], size_t len)
+sha1_update (SHA1_CTX *ctx, const uint8_t data[], size_t bitlen)
 {
-  size_t i;
-  for (i = 0; i < len; ++i)
+  size_t i = 0;
+  ctx->bitlen += bitlen;
+  for (i = 0; i < bitlen / 8; ++i)
     {
       ctx->data[ctx->datalen] = data[i];
       ctx->datalen++;
       if (ctx->datalen == 64)
         {
           sha1_transform (ctx, ctx->data);
-          ctx->bitlen += 512;
+          ctx->datalen = 0;
+        }
+    }
+
+  if (bitlen & 0x7)
+    {
+      int id = bitlen & 0x7;
+      ctx->data[ctx->datalen] = (data[i] & amask[id]) | omask[id];
+      ctx->datalen++;
+      if (ctx->datalen == 64)
+        {
+          sha1_transform (ctx, ctx->data);
           ctx->datalen = 0;
         }
     }
@@ -102,24 +117,41 @@ sha1_final (SHA1_CTX *ctx, uint8_t *hash)
 
   i = ctx->datalen;
 
-  // Pad whatever data is left in the buffer.
-  if (ctx->datalen < 56)
+  // Pad whatever data is left in the buffer
+  if (ctx->bitlen & 0x7)
     {
-      ctx->data[i++] = 0x80;
-      while (i < 56)
-        ctx->data[i++] = 0x00;
+      if (ctx->datalen >= 57)
+        {
+          while (i < 64)
+            ctx->data[i++] = 0x00;
+          sha1_transform (ctx, ctx->data);
+          memset (ctx->data, 0, 56);
+        }
+      else
+        {
+          while (i < 56)
+            ctx->data[i++] = 0x00;
+        }
     }
   else
     {
-      ctx->data[i++] = 0x80;
-      while (i < 64)
-        ctx->data[i++] = 0x00;
-      sha1_transform (ctx, ctx->data);
-      memset (ctx->data, 0, 56);
+      if (ctx->datalen < 56)
+        {
+          ctx->data[i++] = 0x80;
+          while (i < 56)
+            ctx->data[i++] = 0x00;
+        }
+      else
+        {
+          ctx->data[i++] = 0x80;
+          while (i < 64)
+            ctx->data[i++] = 0x00;
+          sha1_transform (ctx, ctx->data);
+          memset (ctx->data, 0, 56);
+        }
     }
 
   // Append to the padding the total message's length in bits and transform.
-  ctx->bitlen += ctx->datalen * 8;
   ctx->data[63] = ctx->bitlen;
   ctx->data[62] = ctx->bitlen >> 8;
   ctx->data[61] = ctx->bitlen >> 16;
@@ -145,22 +177,29 @@ sha1_final (SHA1_CTX *ctx, uint8_t *hash)
 vector<uint8_t>
 sha128sum (vector<uint8_t> v, size_t bitlen)
 {
-  if (bitlen & 0x7)
-    throw "Currently only supports byte alignment";
   SHA1_CTX ctx;
-  size_t len = bitlen >> 3;
   sha1_init (&ctx);
-  size_t size = 0x100000;
+  size_t size = 0x100000, cur_block = 0, i = 0, j = 0;
   uint8_t *tmp = new uint8_t[size], *out = new uint8_t[20];
-
-  for (int i = 0; i < len; i += size)
+  size_t bytes = bitlen >> 3;
+  bool ok = ((bitlen & 0x7) == 0);
+  for (i = 0; i < bytes; i += size)
     {
-      size_t cur_block = 0;
-      for (int j = 0; j < size and j + i < v.size (); ++j)
+      cur_block = 0;
+      for (j = 0; j < size and j + i < bytes; ++j)
         {
           tmp[j] = v[i + j];
-          cur_block++;
+          cur_block += 8;
         }
+      if (ok)
+        {
+          sha1_update (&ctx, tmp, cur_block);
+        }
+    }
+  if (bitlen & 0x7)
+    {
+      tmp[j] = v[bytes];
+      cur_block += (bitlen & 0x7);
       sha1_update (&ctx, tmp, cur_block);
     }
   sha1_final (&ctx, out);
@@ -172,28 +211,38 @@ sha128sum (vector<uint8_t> v, size_t bitlen)
 }
 
 vector<uint8_t>
-MAC (vector<uint8_t> secret_key, vector<uint8_t> msg, SHA1_CTX *ctx)
+MAC (vector<uint8_t> secret_key, vector<uint8_t> msg, size_t bitlen,
+     SHA1_CTX *ctx)
 {
   if (!ctx)
     {
       ctx = new SHA1_CTX ();
       sha1_init (ctx);
     }
-  uint8_t *out = new uint8_t[20];
-  for (int i = 0; i < 20; ++i)
-    out[i] = secret_key[i];
-  sha1_init (ctx);
-  sha1_update (ctx, out, 20);
-  size_t size = 0x1000000;
-  uint8_t *tmp = new uint8_t[size];
-  for (int i = 0; i < msg.size (); i += size)
+  size_t size = 0x100000, cur_block = 0, i = 0, j = 0;
+  uint8_t *tmp = new uint8_t[size], *out = new uint8_t[20];
+  for (int i = 0; i < 64; ++i)
+    tmp[i] = secret_key[i];
+  sha1_update (ctx, tmp, 512);
+  size_t bytes = bitlen >> 3;
+  bool ok = ((bitlen & 0x7) == 0);
+  for (i = 0; i < bytes; i += size)
     {
-      size_t cur_block = 0;
-      for (int j = 0; j < size and j + i < msg.size (); ++j)
+      cur_block = 0;
+      for (j = 0; j < size and j + i < bytes; ++j)
         {
           tmp[j] = msg[i + j];
-          cur_block++;
+          cur_block += 8;
         }
+      if (ok)
+        {
+          sha1_update (ctx, tmp, cur_block);
+        }
+    }
+  if (bitlen & 0x7)
+    {
+      tmp[j] = msg[bytes];
+      cur_block += (bitlen & 0x7);
       sha1_update (ctx, tmp, cur_block);
     }
   sha1_final (ctx, out);
