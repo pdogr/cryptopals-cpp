@@ -14,9 +14,10 @@ struct SHA1_CTX
 };
 
 void sha1_init (SHA1_CTX *ctx);
-void sha1_update (SHA1_CTX *ctx, const uint8_t *data, size_t len);
+void sha1_update (SHA1_CTX *ctx, const uint8_t *data, size_t len,
+                  bool = false);
 void sha1_final (SHA1_CTX *ctx, uint8_t *hash);
-
+SHA1_CTX hash2ctx (vector<uint8_t> hash, size_t bitlen);
 vector<uint8_t> sha128sum (vector<uint8_t> v, size_t bitlen);
 
 vector<uint8_t> MAC (vector<uint8_t> secret_key, vector<uint8_t> msg,

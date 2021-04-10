@@ -6,7 +6,6 @@ void
 sha1_transform (SHA1_CTX *ctx, const uint8_t *data)
 {
   uint32_t a, b, c, d, e, i, j, t, m[80];
-
   for (i = 0, j = 0; i < 16; ++i, j += 4)
     m[i] = (data[j] << 24) + (data[j + 1] << 16) + (data[j + 2] << 8)
            + (data[j + 3]);
@@ -59,7 +58,6 @@ sha1_transform (SHA1_CTX *ctx, const uint8_t *data)
       b = a;
       a = t;
     }
-
   ctx->state[0] += a;
   ctx->state[1] += b;
   ctx->state[2] += c;
@@ -83,14 +81,14 @@ sha1_init (SHA1_CTX *ctx)
 }
 
 void
-sha1_update (SHA1_CTX *ctx, const uint8_t data[], size_t bitlen)
+sha1_update (SHA1_CTX *ctx, const uint8_t data[], size_t bitlen, bool fin)
 {
   size_t i = 0;
-  ctx->bitlen += bitlen;
   for (i = 0; i < bitlen / 8; ++i)
     {
       ctx->data[ctx->datalen] = data[i];
       ctx->datalen++;
+      ctx->bitlen += 8;
       if (ctx->datalen == 64)
         {
           sha1_transform (ctx, ctx->data);
@@ -98,11 +96,12 @@ sha1_update (SHA1_CTX *ctx, const uint8_t data[], size_t bitlen)
         }
     }
 
-  if (bitlen & 0x7)
+  if (fin and bitlen & 0x7)
     {
       int id = bitlen & 0x7;
       ctx->data[ctx->datalen] = (data[i] & amask[id]) | omask[id];
       ctx->datalen++;
+      ctx->bitlen += (bitlen & 0x7);
       if (ctx->datalen == 64)
         {
           sha1_transform (ctx, ctx->data);
@@ -150,7 +149,6 @@ sha1_final (SHA1_CTX *ctx, uint8_t *hash)
           memset (ctx->data, 0, 56);
         }
     }
-
   // Append to the padding the total message's length in bits and transform.
   ctx->data[63] = ctx->bitlen;
   ctx->data[62] = ctx->bitlen >> 8;
@@ -160,8 +158,8 @@ sha1_final (SHA1_CTX *ctx, uint8_t *hash)
   ctx->data[58] = ctx->bitlen >> 40;
   ctx->data[57] = ctx->bitlen >> 48;
   ctx->data[56] = ctx->bitlen >> 56;
-  sha1_transform (ctx, ctx->data);
 
+  sha1_transform (ctx, ctx->data);
   // Since this implementation uses little endian byte ordering and MD uses big
   // endian, reverse all the bytes when copying the final state to the output
   // hash.
@@ -173,6 +171,25 @@ sha1_final (SHA1_CTX *ctx, uint8_t *hash)
       hash[i + 12] = (ctx->state[3] >> (24 - i * 8)) & 0x000000ff;
       hash[i + 16] = (ctx->state[4] >> (24 - i * 8)) & 0x000000ff;
     }
+}
+
+SHA1_CTX
+hash2ctx (vector<uint8_t> hash, size_t bitlen)
+{
+  SHA1_CTX ctx;
+  sha1_init (&ctx);
+  ctx.bitlen = bitlen;
+  ctx.datalen = 0;
+  memset (ctx.state, 0, sizeof (ctx.state));
+  for (int i = 0; i < 4; ++i)
+    {
+      ctx.state[0] |= (hash[i] << (24 - 8 * i));
+      ctx.state[1] |= (hash[i + 4] << (24 - 8 * i));
+      ctx.state[2] |= (hash[i + 8] << (24 - 8 * i));
+      ctx.state[3] |= (hash[i + 12] << (24 - 8 * i));
+      ctx.state[4] |= (hash[i + 16] << (24 - 8 * i));
+    }
+  return ctx;
 }
 vector<uint8_t>
 sha128sum (vector<uint8_t> v, size_t bitlen)
@@ -200,7 +217,7 @@ sha128sum (vector<uint8_t> v, size_t bitlen)
     {
       tmp[j] = v[bytes];
       cur_block += (bitlen & 0x7);
-      sha1_update (&ctx, tmp, cur_block);
+      sha1_update (&ctx, tmp, cur_block, true);
     }
   sha1_final (&ctx, out);
 
@@ -214,17 +231,26 @@ vector<uint8_t>
 MAC (vector<uint8_t> secret_key, vector<uint8_t> msg, size_t bitlen,
      SHA1_CTX *ctx)
 {
+  bool remove = false;
   if (!ctx)
     {
+      remove = true;
       ctx = new SHA1_CTX ();
       sha1_init (ctx);
     }
+
   size_t size = 0x100000, cur_block = 0, i = 0, j = 0;
   uint8_t *tmp = new uint8_t[size], *out = new uint8_t[20];
-  for (int i = 0; i < 64; ++i)
-    tmp[i] = secret_key[i];
-  sha1_update (ctx, tmp, 512);
   size_t bytes = bitlen >> 3;
+  if (secret_key.size ())
+    {
+      for (j = 0; j < secret_key.size (); ++j)
+        {
+          tmp[j] = secret_key[j];
+        }
+      sha1_update (ctx, tmp, 8 * secret_key.size ());
+    }
+
   bool ok = ((bitlen & 0x7) == 0);
   for (i = 0; i < bytes; i += size)
     {
@@ -243,8 +269,12 @@ MAC (vector<uint8_t> secret_key, vector<uint8_t> msg, size_t bitlen,
     {
       tmp[j] = msg[bytes];
       cur_block += (bitlen & 0x7);
-      sha1_update (ctx, tmp, cur_block);
+      sha1_update (ctx, tmp, cur_block, true);
     }
   sha1_final (ctx, out);
+  if (remove)
+    {
+      free (ctx);
+    }
   return vector<uint8_t> (out, out + 20);
 }

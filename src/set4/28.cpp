@@ -114,7 +114,7 @@ main ()
   test_file ("../test_vecs/byte/SHA1LongMsg.rsp", 20);
   test_file ("../test_vecs/bit/SHA1ShortMsg.rsp", 20);
   test_file ("../test_vecs/bit/SHA1LongMsg.rsp", 20);
-  vector<uint8_t> K = random_vec (64);
+  vector<uint8_t> K = random_vec (0x1111);
   vector<uint8_t> M = random_vec (0xaaaeff);
   cout << "Size of M: " << M.size () << "\n";
 

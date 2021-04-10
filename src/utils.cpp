@@ -121,3 +121,11 @@ random_vec (ssize_t sz)
   delete[] tmp;
   return b;
 }
+
+vector<uint8_t>
+operator+ (const vector<uint8_t> &a, const vector<uint8_t> &b)
+{
+  vector<uint8_t> c (a);
+  c.insert (c.end (), b.begin (), b.end ());
+  return c;
+}

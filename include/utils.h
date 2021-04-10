@@ -34,3 +34,5 @@ string readall (char *);
 vector<string> readline (char *);
 void random_bytes (uint8_t *, ssize_t);
 vector<uint8_t> random_vec (ssize_t sz);
+
+vector<uint8_t> operator+ (const vector<uint8_t> &a, const vector<uint8_t> &b);
