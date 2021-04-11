@@ -1,4 +1,4 @@
-project_sources+=files([
+project_sources=files(
   'aes.cpp',
   'utils.cpp',
   'xor.cpp',
@@ -7,5 +7,5 @@ project_sources+=files([
   'dh.cpp',
   'md4.cpp',
   'mac.cpp'
-])
+)
 

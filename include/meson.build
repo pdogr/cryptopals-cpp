@@ -5,5 +5,6 @@ project_headers+=[
   'mt19937.h',
   'sha.h',
   'dh.h',
-  'md4.h'
+  'md4.h',
+  'mac.h'
 ]
