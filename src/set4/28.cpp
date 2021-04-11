@@ -118,7 +118,7 @@ main ()
   vector<uint8_t> M = random_vec (0xaaaeff);
   cout << "Size of M: " << M.size () << "\n";
 
-  cout << MAC (K, M, M.size () * 8) << "\n";
+  cout << SHA1MAC (K, M, M.size () * 8) << "\n";
 
   for (auto &x : M)
     K.push_back (x);

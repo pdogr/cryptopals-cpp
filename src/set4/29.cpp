@@ -30,15 +30,15 @@ string msg
 string tgt_suffix = ";admin=true;";
 
 bool
-is_valid_MAC (vector<uint8_t> msg, size_t bitlen, vector<uint8_t> hash)
+is_valid_SHA1MAC (vector<uint8_t> msg, size_t bitlen, vector<uint8_t> hash)
 {
-  vector<uint8_t> calc = MAC (K, msg, bitlen);
+  vector<uint8_t> calc = SHA1MAC (K, msg, bitlen);
   return calc == hash;
 }
 vector<uint8_t>
 get_valid_hash (string s)
 {
-  return MAC (K, bytes (s), s.size () * 8);
+  return SHA1MAC (K, bytes (s), s.size () * 8);
 }
 int
 main ()
@@ -59,11 +59,11 @@ main ()
       vector<uint8_t> vtgt = bytes (tgt_suffix);
       auto pd = get_padding (tot_len);
       vector<uint8_t> vforged_msg (b1 + pd + vtgt);
-      SHA1_CTX ctx = hash2ctx (true_hash, tot_len + 65 + p);
+      SHA1_CTX ctx = hash2SHA1ctx (true_hash, tot_len + 65 + p);
       string forged_msg = to_string (vforged_msg);
       vector<uint8_t> forged_mac
-          = MAC (vector<uint8_t> (), vtgt, 8 * vtgt.size (), &ctx);
-      if (is_valid_MAC (vforged_msg, 8 * vforged_msg.size (), forged_mac))
+          = SHA1MAC (vector<uint8_t> (), vtgt, 8 * vtgt.size (), &ctx);
+      if (is_valid_SHA1MAC (vforged_msg, 8 * vforged_msg.size (), forged_mac))
         {
           cout << "Guessed key length:" << guess << "\n";
           cout << "Forged msg: " << forged_msg << "\n";

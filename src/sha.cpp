@@ -1,7 +1,7 @@
 #include "../include/sha.h"
 
-uint8_t amask[] = { 0x0, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe };
-uint8_t omask[] = { 0x80, 0x40, 0x20, 0x10, 0x8, 0x4, 0x2, 0x1 };
+static uint8_t amask[] = { 0x0, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe };
+static uint8_t omask[] = { 0x80, 0x40, 0x20, 0x10, 0x8, 0x4, 0x2, 0x1 };
 void
 sha1_transform (SHA1_CTX *ctx, const uint8_t *data)
 {
@@ -174,7 +174,7 @@ sha1_final (SHA1_CTX *ctx, uint8_t *hash)
 }
 
 SHA1_CTX
-hash2ctx (vector<uint8_t> hash, size_t bitlen)
+hash2SHA1ctx (vector<uint8_t> hash, size_t bitlen)
 {
   SHA1_CTX ctx;
   sha1_init (&ctx);
@@ -228,8 +228,8 @@ sha128sum (vector<uint8_t> v, size_t bitlen)
 }
 
 vector<uint8_t>
-MAC (vector<uint8_t> secret_key, vector<uint8_t> msg, size_t bitlen,
-     SHA1_CTX *ctx)
+SHA1MAC (vector<uint8_t> secret_key, vector<uint8_t> msg, size_t bitlen,
+         SHA1_CTX *ctx)
 {
   bool remove = false;
   if (!ctx)
