@@ -7,24 +7,27 @@ project('cryptopals-cpp',
 
 project_sources=[]
 project_headers=[]
-inc=[include_directories('include')]
 deps=[
 	dependency('boost'),
+  dependency('threads')
 ]
 
 subdir('src')
 subdir('include')
 
+inc=[include_directories('include')]
+lib=static_library('static',sources: project_sources)
+
 set=get_option('set')
 file=get_option('file')
 
-project_sources+=[
-  'src/'+set+'/'+file
-]
+source='src/'+set+'/'+file+'.cpp'
 
-target=executable(meson.project_name(),
-      project_sources,
-    dependencies: deps,include_directories:inc )
-
+target=executable(
+    file,
+    source,
+    dependencies: deps,
+    include_directories:inc,
+    link_with: lib)
 
 

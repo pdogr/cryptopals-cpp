@@ -5,6 +5,7 @@ project_sources+=files([
   'mt19937.cpp',
   'sha.cpp',
   'dh.cpp',
-  'md4.cpp'
+  'md4.cpp',
+  'mac.cpp'
 ])
 
