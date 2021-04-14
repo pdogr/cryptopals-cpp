@@ -27,6 +27,12 @@ auto port = "8080";
 int
 main (int argc, char *argv[])
 {
+  int tries = 10;
+  if (argc == 2)
+    {
+      tries = stoi (argv[1]);
+      assert (tries > 0);
+    }
   using namespace std::chrono;
   const auto send = [] (vector<uint8_t> &v) {
     asio::io_context ioc{};
@@ -56,13 +62,13 @@ main (int argc, char *argv[])
         {
           v[i] = (uint8_t) (g & 0xff);
           long count = 0;
-          for (int j = 0; j < 10; ++j)
+          for (int j = 0; j < tries; ++j)
             {
               auto start = high_resolution_clock::now ();
               send (v);
               auto stop = high_resolution_clock::now ();
               long double time
-                  = duration_cast<microseconds> (stop - start).count ();
+                  = duration_cast<nanoseconds> (stop - start).count ();
               if (time < avg_prev_time)
                 {
                   continue;
